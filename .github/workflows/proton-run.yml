@@ -4,12 +4,12 @@
 name: 'proton-run'
 
 on:
-  pull_request:
-    types:
-      - opened
-      - reopened
-    paths:
-      - '**/.proton/deployment-metadata.json'
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - reopened
+  #   paths:
+  #     - '**/.proton/deployment-metadata.json'
   push:
     branches:
       - main
@@ -184,8 +184,8 @@ jobs:
       id: tf_setup
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: 1.3.0
-        # terraform_version: 1.0.7
+        # terraform_version: 1.3.0
+        terraform_version: 1.0.7
         terraform_wrapper: false
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
@@ -199,17 +199,32 @@ jobs:
       run: terraform fmt -diff -check
 
     # Generates an execution plan for Terraform
-    - name: Terraform Plan
-      id: tf_plan
-      run: terraform plan -var="aws_region=${{ needs.get-deployment-data.outputs.target_region }}"
+    # - name: Terraform Plan
+    #   id: tf_plan
+    #   run: terraform plan -var="aws_region=${{ needs.get-deployment-data.outputs.target_region }}"
 
     # On push to main, build or change infrastructure according to Terraform configuration files
     # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-    - name: Terraform Apply
-      id: tf_apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve -var="aws_region=${{ needs.get-deployment-data.outputs.target_region }}"
+    # - name: Terraform Apply
+    #   id: tf_apply
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   run: terraform apply -auto-approve -var="aws_region=${{ needs.get-deployment-data.outputs.target_region }}"
     
+    ## ADDING THESE LINES TO FORCE DESTROY 
+
+    - name: Terraform Destroy (Add-ons)
+      id: tf_destroy_addons
+      run: terraform apply -auto-approve -destroy -target="module.kubernetes_addons" -var="aws_region=${{ needs.get-deployment-data.outputs.target_region }}"
+
+    - name: Terraform Destroy (Cluster)
+      id: tf_destroy_cluster
+      run: terraform apply -auto-approve -destroy -target="module.eks_blueprints" -var="aws_region=${{ needs.get-deployment-data.outputs.target_region }}"
+
+    - name: Terraform Destroy (Everything)
+      id: tf_destroy_everything
+      run: terraform apply -auto-approve -destroy -var="aws_region=${{ needs.get-deployment-data.outputs.target_region }}"
+
+
     # If this completes, then the entire workflow has successfully completed
     - name: Mark Success
       id: mark_success
