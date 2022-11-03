@@ -3,7 +3,7 @@
 #---------------------------------------------------------------
 
 module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.0.4"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.14.0"
 
   # ENV Tags
   tenant      = "${random_id.this.hex}-${local.tenant}"
@@ -30,7 +30,7 @@ module "eks_blueprints" {
 #-------------------------------------------------------------------
 
 module "kubernetes_addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.0.4"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.14.0"
 
   eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
